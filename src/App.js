@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Landing from './pages/Landing'; 
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -12,11 +13,26 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/records" element={<ProtectedRoute><Records /></ProtectedRoute>} />
-          <Route path="/users" element={<ProtectedRoute allowedRoles={['admin']}><Users /></ProtectedRoute>} />
+
+          <Route 
+            path="/dashboard" 
+            element={<ProtectedRoute><Dashboard /></ProtectedRoute>} 
+          />
+          <Route 
+            path="/records" 
+            element={<ProtectedRoute><Records /></ProtectedRoute>} 
+          />
+          <Route 
+            path="/users" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Users />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
