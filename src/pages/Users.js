@@ -1,57 +1,77 @@
-import { useEffect, useState } from 'react';
-import api from '../services/api';
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { ShieldAlert } from "lucide-react";
+
+import Notification from "../components/ui/Notification";
+import UserTable from "../components/users/UserTable";
+import AddUserModal from "../components/users/AddUserModal";
 
 const Users = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
-  const [editing, setEditing] = useState(null);
-  const [editForm, setEditForm] = useState({});
+  const [message, setMessage] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  useEffect(() => {
-    api.get('/users').then(res => setUsers(res.data));
-  }, []);
-
-  const handleUpdate = async (id) => {
-    await api.put(`/users/${id}`, editForm);
-    setEditing(null);
-    const res = await api.get('/users');
-    setUsers(res.data);
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Delete user?')) {
-      await api.delete(`/users/${id}`);
-      setUsers(users.filter(u => u.id !== id));
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get("/users");
+      setUsers(res.data);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const showNotification = (msg) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 4000);
+  };
+
   return (
-    <div>
-      <h2>User Management</h2>
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          {users.map(user => (
-            <tr key={user.id}>
-              {editing === user.id ? (
-                <>
-                  <td><input value={editForm.name || user.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} /></td>
-                  <td><input value={editForm.email || user.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} /></td>
-                  <td><select value={editForm.role || user.role} onChange={(e) => setEditForm({...editForm, role: e.target.value})}><option>viewer</option><option>analyst</option><option>admin</option></select></td>
-                  <td><select value={editForm.status || user.status} onChange={(e) => setEditForm({...editForm, status: e.target.value})}><option>active</option><option>inactive</option></select></td>
-                  <td><button onClick={() => handleUpdate(user.id)}>Save</button><button onClick={() => setEditing(null)}>Cancel</button></td>
-                </>
-              ) : (
-                <>
-                  <td>{user.name}</td><td>{user.email}</td><td>{user.role}</td><td>{user.status}</td>
-                  <td><button onClick={() => { setEditing(user.id); setEditForm({}); }}>Edit</button>
-                  <button onClick={() => handleDelete(user.id)}>Delete</button></td>
-                </>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <main className="md:ml-20 flex-1 p-4 md:p-8 lg:p-10 w-full max-w-[1400px] mx-auto pb-24 md:pb-10 relative">
+        <div className="fixed inset-0 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.08] pointer-events-none z-0" />
+
+        <div className="relative z-10 space-y-8">
+          <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase inline-block bg-white px-6 py-2 border-[4px] border-black rounded-2xl shadow-[6px_6px_0_0_#000]">
+                Users
+              </h1>
+              <div className="h-2 w-32 bg-[#FFD500] border-[3px] border-black mt-4 shadow-[3px_3px_0_0_#000] rounded-full"></div>
+            </div>
+            <div className="bg-black text-[#FFD500] border-[4px] border-black rounded-xl px-4 py-2 font-black uppercase tracking-widest text-xs shadow-[4px_4px_0_0_#FFD500] flex items-center gap-2 w-fit">
+              <ShieldAlert size={16} strokeWidth={3} /> Admin Privileges Active
+            </div>
+          </header>
+
+          <UserTable 
+            users={users} 
+            currentUser={currentUser} 
+            fetchUsers={fetchUsers}
+            showNotification={showNotification}
+            onAddClick={() => setIsAddModalOpen(true)}
+          />
+
+        </div>
+      </main>
+
+      <Notification message={message} onClose={() => setMessage("")} />
+
+      <AddUserModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSuccess={(msg) => {
+          showNotification(msg);
+          fetchUsers();
+        }}
+        onError={showNotification}
+      />
+    </>
   );
 };
 
