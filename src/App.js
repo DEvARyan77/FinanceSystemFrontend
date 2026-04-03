@@ -9,6 +9,7 @@ import Records from './pages/Records';
 import Users from './pages/Users';
 import ForgotPassword from './pages/forgotPassword';
 import MainLayout from './components/layout/MainLayout';
+import PublicRoute from './context/PublicRoute';
 
 function App() {
   return (
@@ -16,8 +17,10 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
           <Route path="/forgot" element={<ForgotPassword />} />
           <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -31,7 +34,7 @@ function App() {
               } 
             />
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
